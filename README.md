@@ -1,1 +1,93 @@
 # chordoma_rna_example
+
+RNAseq differential expression analysis pipeline using the [airway](https://bioconductor.org/packages/release/data/experiment/html/airway.html) dataset as a worked example.
+
+## Overview
+
+The analysis (`rnaseq_analysis.R`) covers the following steps:
+
+| Step | Tool | Output |
+|------|------|--------|
+| Differential expression | DESeq2 | `deseq2_results.csv` |
+| Heatmap (top 50 variable genes) | ComplexHeatmap | `heatmap_top50_variable_genes.pdf` |
+| Volcano plot | EnhancedVolcano | `volcano_plot.pdf` |
+| Gene-set enrichment (GSEA) | clusterProfiler `GSEA()` | `gsea_results.csv`, `gsea_dotplot.pdf` |
+| Over-representation analysis (ORA) | clusterProfiler `enricher()` | `ora_results.csv`, `ora_dotplot.pdf` |
+
+Gene sets for both GSEA and ORA are the **CP:KEGG_MEDICUS** collection sourced from
+[MSigDB](https://www.gsea-msigdb.org/gsea/msigdb/) via the
+[msigdbr](https://cran.r-project.org/package=msigdbr) package.
+
+## Requirements
+
+### R packages
+
+Install the required packages from Bioconductor and CRAN:
+
+```r
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install(c(
+  "airway",
+  "DESeq2",
+  "ComplexHeatmap",
+  "EnhancedVolcano",
+  "clusterProfiler",
+  "org.Hs.eg.db",
+  "AnnotationDbi"
+))
+
+install.packages(c("msigdbr", "dplyr", "tibble", "circlize"))
+```
+
+> **ashr** (used for LFC shrinkage) is also required:
+> ```r
+> install.packages("ashr")
+> ```
+
+## Usage
+
+Run the analysis script from an R session or the command line:
+
+```r
+source("rnaseq_analysis.R")
+```
+
+or from a terminal:
+
+```bash
+Rscript rnaseq_analysis.R
+```
+
+All output files (CSV tables and PDF figures) are written to the working directory.
+
+## Dataset
+
+The [airway](https://bioconductor.org/packages/release/data/experiment/html/airway.html)
+package provides RNA-Seq read counts from an experiment on airway smooth muscle cells
+treated with dexamethasone (Himes *et al.*, 2014, PLoS ONE). The contrast of interest is
+**treated (`trt`) vs untreated (`untrt`)** while accounting for cell-line (`cell`) as a
+covariate.
+
+## Analysis details
+
+### Differential expression (DESeq2)
+- Design formula: `~ cell + dex`
+- Pre-filtering: genes with fewer than 10 total counts removed
+- LFC shrinkage with the `ashr` method
+
+### Heatmap (ComplexHeatmap)
+- Top 50 most variable genes selected after variance-stabilising transformation (VST)
+- Rows Z-score normalised; columns annotated by treatment and cell line
+
+### Volcano plot (EnhancedVolcano)
+- X-axis: shrunken log2 fold-change
+- Y-axis: adjusted p-value
+- Thresholds: |LFC| > 1, padj < 0.05
+
+### Pathway analysis (clusterProfiler + msigdbr)
+- **Gene sets**: CP:KEGG_MEDICUS (MSigDB C2 category, *Homo sapiens*)
+- **GSEA**: genes ranked by DESeq2 Wald statistic; `GSEA()` with `eps = 0`
+- **ORA**: significant DE genes (padj < 0.05, |LFC| > 1) tested against all genes
+  with a valid symbol as the background universe; `enricher()` used
