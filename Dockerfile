@@ -1,5 +1,9 @@
 FROM rocker/tidyverse:4.5.2
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglpk-dev \
+  && rm -rf /var/lib/apt/lists/*
+
 RUN Rscript -e "\
   install.packages(c('circlize', 'matrixStats', 'msigdbr')); \
   if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager'); \
