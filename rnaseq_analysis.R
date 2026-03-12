@@ -163,11 +163,11 @@ kegg_medicus <- msigdbr(
 )
 
 TERM2GENE <- kegg_medicus %>%
-  select(gs_name, gene_symbol) %>%
+  select(gs_id, gene_symbol) %>%
   as.data.frame()
 
 TERM2NAME <- kegg_medicus %>%
-  select(gs_name, gs_description) %>%
+  select(gs_id, gs_name) %>%
   distinct() %>%
   as.data.frame()
 
