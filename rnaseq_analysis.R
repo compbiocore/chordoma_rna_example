@@ -171,6 +171,7 @@ TERM2NAME <- kegg_medicus %>%
   distinct() %>%
   as.data.frame()
 TERM2NAME$gs_name <- gsub("KEGG_MEDICUS_REFERENCE_", "", TERM2NAME$gs_name)
+TERM2NAME$gs_name <- gsub("KEGG_MEDICUS_", "", TERM2NAME$gs_name)
 
 cat(sprintf("CP:KEGG_MEDICUS gene sets loaded: %d pathways, %d gene-set associations\n",
             nrow(TERM2NAME), nrow(TERM2GENE)))
