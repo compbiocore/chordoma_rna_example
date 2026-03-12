@@ -124,6 +124,14 @@ res_volcano <- res_df %>%
   distinct(symbol, .keep_all = TRUE) %>%
   column_to_rownames("symbol")
 
+sig_genes <- res_volcano %>%
+  filter(!is.na(padj) & padj < 0.05 & !is.na(log2FoldChange))
+
+top_up   <- sig_genes %>% arrange(desc(log2FoldChange)) %>% head(10)
+top_down <- sig_genes %>% arrange(log2FoldChange)       %>% head(10)
+
+genes_to_label <- unique(c(rownames(top_up), rownames(top_down)))
+
 pdf("volcano_plot.pdf", width = 10, height = 10)
 EnhancedVolcano(
   res_volcano,
@@ -139,7 +147,8 @@ EnhancedVolcano(
   col        = c("grey30", "#4DBBD5", "#00A087", "#E64B35"),
   legendLabels = c("NS", "Log2FC", "p-value", "p-value & Log2FC"),
   drawConnectors = TRUE,
-  widthConnectors = 0.5
+  widthConnectors = 0.5,
+  selectLab  = genes_to_label
 )
 dev.off()
 
