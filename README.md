@@ -46,6 +46,17 @@ install.packages(c("msigdbr", "dplyr", "tibble", "circlize"))
 > install.packages("ashr")
 > ```
 
+Alternatively, use the provided Dockerfile to build a container:
+```
+docker buildx build --platform linux/amd64,linux/arm64 --push -t jwalla12/chordoma_rna_example:20250312 .
+```
+
+Or Singularity pull to use on Oscar with Open On Demand RStudio on Singularity (https://docs.ccv.brown.edu/oscar/connecting-to-oscar/open-ondemand):
+
+```
+singularity pull chordoma_rna_example:20250312.sif docker://jwalla12/chordoma_rna_example:20250312
+```
+
 ## Usage
 
 Run the analysis script from an R session or the command line:
