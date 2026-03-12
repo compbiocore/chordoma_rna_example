@@ -162,6 +162,12 @@ kegg_medicus <- msigdbr(
   subcategory = "CP:KEGG_MEDICUS"
 )
 
+# Instead of KEGG_MEDICUS, could also use hallmark genes, like this:
+#msigdbr(
+#  species    = "Homo sapiens",
+#  category   = "H")
+# Explore the whole database and play with different options here: https://www.gsea-msigdb.org/gsea/msigdb
+
 TERM2GENE <- kegg_medicus %>%
   select(gs_id, gene_symbol) %>%
   as.data.frame()
@@ -170,7 +176,10 @@ TERM2NAME <- kegg_medicus %>%
   select(gs_id, gs_name) %>%
   distinct() %>%
   as.data.frame()
+
+# These cleaning up steps will not be necessary if you switch to something other than KEGG_MEDICUS
 TERM2NAME$gs_name <- gsub("KEGG_MEDICUS_REFERENCE_", "", TERM2NAME$gs_name)
+TERM2NAME$gs_name <- gsub("KEGG_MEDICUS_", "", TERM2NAME$gs_name)
 
 cat(sprintf("CP:KEGG_MEDICUS gene sets loaded: %d pathways, %d gene-set associations\n",
             nrow(TERM2NAME), nrow(TERM2GENE)))
@@ -208,7 +217,7 @@ cat(sprintf("GSEA complete. Significant pathways (padj < 0.05): %d\n",
             nrow(gsea_df)))
 
 if (nrow(gsea_df) > 0) {
-  pdf("gsea_dotplot.pdf", width = 10, height = 8)
+  pdf("gsea_dotplot.pdf", width = 8, height = 12)
   print(dotplot(gsea_result, showCategory = 20, title = "GSEA – CP:KEGG_MEDICUS"))
   dev.off()
   cat("GSEA dotplot saved to gsea_dotplot.pdf\n")
