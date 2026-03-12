@@ -221,23 +221,19 @@ EnhancedVolcano(
 
 Gene sets are retrieved from MSigDB via `msigdbr`. The **CP:KEGG_MEDICUS** collection
 (MSigDB C2 category) is used for both GSEA and ORA. To use a different collection
-(e.g. Hallmark gene sets), simply change the `category` / `subcategory` arguments — explore
+(e.g. Hallmark gene sets), simply change the `category` / `subcollection` arguments — explore
 the full MSigDB database at <https://www.gsea-msigdb.org/gsea/msigdb>.
 
 ```{r}
 #| label: gene-sets
 
+
+
 kegg_medicus <- msigdbr(
   species    = "Homo sapiens",
   category   = "C2",
-  subcategory = "CP:KEGG_MEDICUS"
+  subcollection = "CP:KEGG_MEDICUS"
 )
-
-# Instead of KEGG_MEDICUS, could also use hallmark genes, like this:
-#msigdbr(
-#  species    = "Homo sapiens",
-#  category   = "H")
-# Explore the whole database and play with different options here: https://www.gsea-msigdb.org/gsea/msigdb
 
 TERM2GENE <- kegg_medicus %>%
   select(gs_id, gene_symbol) %>%
@@ -259,7 +255,7 @@ cat(sprintf("CP:KEGG_MEDICUS gene sets loaded: %d pathways, %d gene-set associat
 ## 8. Gene Set Enrichment Analysis (GSEA)
 
 Genes are ranked by their DESeq2 Wald statistic (sign encodes direction; magnitude encodes
-confidence). One entry per gene symbol is kept (highest |statistic|).
+confidence). One entry per gene symbol is kept (highest |stat|). The "stat" column in DESeq2 represents the test statistic for each gene, calculated as the log2 fold change divided by the standard error of the log2 fold change (lfcSE). 
 
 ```{r}
 #| label: gsea
