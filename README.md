@@ -46,7 +46,7 @@ install.packages(c("msigdbr", "dplyr", "tibble", "circlize"))
 > install.packages("ashr")
 > ```
 
-Alternatively, use the provided Dockerfile to build a container:
+Alternatively, use the provided Dockerfile to build a container, changing the information between the <> characters as needed:
 ```
 docker buildx build --platform linux/amd64,linux/arm64 --push -t <dockerhub_username>/<container_name>:<container_tag> .
 ```
