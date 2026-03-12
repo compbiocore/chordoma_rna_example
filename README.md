@@ -4,15 +4,15 @@ RNAseq differential expression analysis pipeline using the [airway](https://bioc
 
 ## Overview
 
-The analysis (`rnaseq_analysis.R`) covers the following steps:
+The analysis (`rnaseq_analysis.qmd`) covers the following steps:
 
 | Step | Tool | Output |
 |------|------|--------|
 | Differential expression | DESeq2 | `deseq2_results.csv` |
-| Heatmap (top 50 variable genes) | ComplexHeatmap | `heatmap_top50_variable_genes.pdf` |
-| Volcano plot | EnhancedVolcano | `volcano_plot.pdf` |
-| Gene-set enrichment (GSEA) | clusterProfiler `GSEA()` | `gsea_results.csv`, `gsea_dotplot.pdf` |
-| Over-representation analysis (ORA) | clusterProfiler `enricher()` | `ora_results.csv`, `ora_dotplot.pdf` |
+| Heatmap (top 50 variable genes) | ComplexHeatmap | inline figure |
+| Volcano plot | EnhancedVolcano | inline figure |
+| Gene-set enrichment (GSEA) | clusterProfiler `GSEA()` | `gsea_results.csv`, inline figure |
+| Over-representation analysis (ORA) | clusterProfiler `enricher()` | `ora_results.csv`, inline figure |
 
 Gene sets for both GSEA and ORA are the **CP:KEGG_MEDICUS** collection sourced from
 [MSigDB](https://www.gsea-msigdb.org/gsea/msigdb/) via the
@@ -46,7 +46,7 @@ install.packages(c("msigdbr", "dplyr", "tibble", "circlize"))
 > install.packages("ashr")
 > ```
 
-Alternatively, use the provided Dockerfile to build a container:
+Alternatively, use the provided Dockerfile to build a container (based on `rocker/verse`, which includes Quarto):
 ```
 docker buildx build --platform linux/amd64,linux/arm64 --push -t jwalla12/chordoma_rna_example:20250312 .
 ```
@@ -59,19 +59,21 @@ singularity pull chordoma_rna_example:20250312.sif docker://jwalla12/chordoma_rn
 
 ## Usage
 
-Run the analysis script from an R session or the command line:
+Open `rnaseq_analysis.qmd` in RStudio (or another Quarto-aware editor) to run the
+analysis interactively chunk by chunk, or render it into a self-contained HTML report:
 
 ```r
-source("rnaseq_analysis.R")
+quarto::quarto_render("rnaseq_analysis.qmd")
 ```
 
 or from a terminal:
 
 ```bash
-Rscript rnaseq_analysis.R
+quarto render rnaseq_analysis.qmd
 ```
 
-All output files (CSV tables and PDF figures) are written to the working directory.
+All CSV output files are written to the working directory. Figures are embedded directly
+in the rendered HTML document.
 
 ## Dataset
 

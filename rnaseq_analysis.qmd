@@ -1,8 +1,40 @@
-## RNAseq Differential Expression Analysis
-## Dataset: airway
-## Tools: DESeq2, ComplexHeatmap, EnhancedVolcano, clusterProfiler, msigdbr
+---
+title: "RNAseq Differential Expression Analysis"
+subtitle: "Dataset: airway | Tools: DESeq2, ComplexHeatmap, EnhancedVolcano, clusterProfiler"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
 
-# ── 1. Load libraries ─────────────────────────────────────────────────────────
+## Overview
+
+This document walks through a complete RNA-seq differential expression analysis using the
+[airway](https://bioconductor.org/packages/release/data/experiment/html/airway.html) dataset
+as a worked example. The contrast of interest is **treated (`trt`) vs untreated (`untrt`)**
+while accounting for cell-line (`cell`) as a covariate.
+
+| Step | Tool | Output |
+|------|------|--------|
+| Differential expression | DESeq2 | `deseq2_results.csv` |
+| Heatmap (top 50 variable genes) | ComplexHeatmap | inline figure |
+| Volcano plot | EnhancedVolcano | inline figure |
+| Gene-set enrichment (GSEA) | clusterProfiler `GSEA()` | `gsea_results.csv`, inline figure |
+| Over-representation analysis (ORA) | clusterProfiler `enricher()` | `ora_results.csv`, inline figure |
+
+Gene sets for both GSEA and ORA are the **CP:KEGG_MEDICUS** collection sourced from
+[MSigDB](https://www.gsea-msigdb.org/gsea/msigdb/) via the
+[msigdbr](https://cran.r-project.org/package=msigdbr) package.
+
+## 1. Load libraries
+
+```{r}
+#| label: libraries
 
 library(airway)
 library(DESeq2)
@@ -16,8 +48,12 @@ library(dplyr)
 library(tibble)
 library(circlize)
 library(matrixStats)
+```
 
-# ── Configuration ─────────────────────────────────────────────────────────────
+## 2. Configuration
+
+```{r}
+#| label: config
 
 SEED <- 42
 
@@ -25,13 +61,26 @@ SEED <- 42
 COL_DEX  <- c("trt" = "#E64B35", "untrt" = "#4DBBD5")
 COL_CELL <- c("N061011" = "#00A087", "N052611" = "#3C5488",
               "N080611" = "#F39B7F", "N61311"  = "#8491B4")
+```
 
-# ── 2. Load the airway dataset ────────────────────────────────────────────────
+## 3. Load the airway dataset
+
+```{r}
+#| label: load-data
 
 data(airway)
 se <- airway
+```
 
-# ── 3. DESeq2 differential expression analysis ───────────────────────────────
+## 4. DESeq2 differential expression analysis
+
+The design formula `~ cell + dex` adjusts for cell-line effects while testing for
+treatment (`dex`) differences. Genes with fewer than 10 total counts are removed prior
+to modelling. Log2 fold-changes are shrunk using the `ashr` method to stabilise estimates
+for lowly-expressed genes while retaining the Wald statistic for downstream GSEA ranking.
+
+```{r}
+#| label: deseq2
 
 dds <- DESeqDataSet(se, design = ~ cell + dex)
 
@@ -68,8 +117,18 @@ cat(sprintf("  Total genes tested: %d\n", nrow(res_df)))
 cat(sprintf("  Significant (padj < 0.05, |LFC| > 1): %d\n",
             sum(!is.na(res_df$padj) & res_df$padj < 0.05 &
                   abs(res_df$log2FoldChange) > 1, na.rm = TRUE)))
+```
 
-# ── 4. ComplexHeatmap ─────────────────────────────────────────────────────────
+## 5. Heatmap of top 50 most variable genes
+
+Variance-stabilising transformation (VST) is applied prior to visualisation. The 50 most
+variable genes are selected, Z-score normalised by row, and displayed with column
+annotations for treatment group and cell line.
+
+```{r}
+#| label: heatmap
+#| fig-width: 10
+#| fig-height: 12
 
 # Variance-stabilising transformation for visualisation
 vsd <- vst(dds, blind = FALSE)
@@ -98,6 +157,8 @@ col_df  <- as.data.frame(colData(dds)[, c("dex", "cell")])
 # Define colour palette for the heatmap
 heatmap_colors <- colorRampPalette(c("#4DBBD5", "white", "#E64B35"))(100)
 
+# ComplexHeatmap exports a pheatmap() compatibility wrapper that returns a
+# Heatmap-class object, which is then drawn with draw() below.
 heatmap_plot <- pheatmap(
   mat,
   color                    = heatmap_colors,
@@ -111,13 +172,18 @@ heatmap_plot <- pheatmap(
   main                     = "Top 50 Most Variable Genes (airway)"
 )
 
-pdf("heatmap_top50_variable_genes.pdf", width = 10, height = 12)
 draw(heatmap_plot)
-dev.off()
+```
 
-cat("Heatmap saved to heatmap_top50_variable_genes.pdf\n")
+## 6. Volcano plot
 
-# ── 5. EnhancedVolcano plot ───────────────────────────────────────────────────
+The volcano plot visualises shrunken log2 fold-changes against adjusted p-values. The top
+10 up-regulated and top 10 down-regulated significant genes (padj < 0.05) are labelled.
+
+```{r}
+#| label: volcano
+#| fig-width: 10
+#| fig-height: 10
 
 res_volcano <- res_df %>%
   filter(!is.na(symbol)) %>%
@@ -132,7 +198,6 @@ top_down <- sig_genes %>% arrange(log2FoldChange)       %>% head(10)
 
 genes_to_label <- unique(c(rownames(top_up), rownames(top_down)))
 
-pdf("volcano_plot.pdf", width = 10, height = 10)
 EnhancedVolcano(
   res_volcano,
   lab        = rownames(res_volcano),
@@ -150,11 +215,17 @@ EnhancedVolcano(
   widthConnectors = 0.5,
   selectLab  = genes_to_label
 )
-dev.off()
+```
 
-cat("Volcano plot saved to volcano_plot.pdf\n")
+## 7. Build gene sets from MSigDB (CP:KEGG_MEDICUS)
 
-# ── 6. Build TERM2GENE and TERM2NAME from msigdbr (CP:KEGG_MEDICUS) ──────────
+Gene sets are retrieved from MSigDB via `msigdbr`. The **CP:KEGG_MEDICUS** collection
+(MSigDB C2 category) is used for both GSEA and ORA. To use a different collection
+(e.g. Hallmark gene sets), simply change the `category` / `subcategory` arguments — explore
+the full MSigDB database at <https://www.gsea-msigdb.org/gsea/msigdb>.
+
+```{r}
+#| label: gene-sets
 
 kegg_medicus <- msigdbr(
   species    = "Homo sapiens",
@@ -183,8 +254,17 @@ TERM2NAME$gs_name <- gsub("KEGG_MEDICUS_", "", TERM2NAME$gs_name)
 
 cat(sprintf("CP:KEGG_MEDICUS gene sets loaded: %d pathways, %d gene-set associations\n",
             nrow(TERM2NAME), nrow(TERM2GENE)))
+```
 
-# ── 7. GSEA analysis (clusterProfiler::GSEA) ──────────────────────────────────
+## 8. Gene Set Enrichment Analysis (GSEA)
+
+Genes are ranked by their DESeq2 Wald statistic (sign encodes direction; magnitude encodes
+confidence). One entry per gene symbol is kept (highest |statistic|).
+
+```{r}
+#| label: gsea
+#| fig-width: 8
+#| fig-height: 12
 
 # Build a ranked gene list using the DESeq2 Wald statistic.
 # Use genes with valid symbols only; keep one entry per symbol (highest |stat|).
@@ -217,13 +297,20 @@ cat(sprintf("GSEA complete. Significant pathways (padj < 0.05): %d\n",
             nrow(gsea_df)))
 
 if (nrow(gsea_df) > 0) {
-  pdf("gsea_dotplot.pdf", width = 8, height = 12)
   print(dotplot(gsea_result, showCategory = 20, title = "GSEA – CP:KEGG_MEDICUS"))
-  dev.off()
-  cat("GSEA dotplot saved to gsea_dotplot.pdf\n")
 }
+```
 
-# ── 8. ORA analysis (clusterProfiler::enricher) ───────────────────────────────
+## 9. Over-Representation Analysis (ORA)
+
+ORA tests whether significantly differentially expressed genes (padj < 0.05, |LFC| > 1)
+are over-represented in any gene set relative to all tested genes with a valid symbol as
+the background universe.
+
+```{r}
+#| label: ora
+#| fig-width: 10
+#| fig-height: 8
 
 # Significant DE genes: padj < 0.05 and |LFC| > 1
 sig_genes <- res_df %>%
@@ -258,10 +345,8 @@ cat(sprintf("ORA complete. Significant pathways (padj < 0.05): %d\n",
             nrow(ora_df)))
 
 if (nrow(ora_df) > 0) {
-  pdf("ora_dotplot.pdf", width = 10, height = 8)
   print(dotplot(ora_result, showCategory = 20, title = "ORA – CP:KEGG_MEDICUS"))
-  dev.off()
-  cat("ORA dotplot saved to ora_dotplot.pdf\n")
 }
 
 cat("\nAll analyses complete.\n")
+```

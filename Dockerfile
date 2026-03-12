@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:4.5.2
+FROM rocker/verse:4.5.2
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libglpk-dev \
