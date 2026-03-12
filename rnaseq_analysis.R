@@ -94,23 +94,21 @@ rownames(mat) <- ifelse(is.na(row_symbols), rownames(mat), row_symbols)
 
 # Column annotations
 col_df  <- as.data.frame(colData(dds)[, c("dex", "cell")])
-ha      <- HeatmapAnnotation(
-  df     = col_df,
-  col    = list(dex = COL_DEX, cell = COL_CELL)
-)
 
-heatmap_plot <- Heatmap(
+# Define colour palette for the heatmap
+heatmap_colors <- colorRampPalette(c("#4DBBD5", "white", "#E64B35"))(100)
+
+heatmap_plot <- pheatmap(
   mat,
-  name                  = "Z-score",
-  top_annotation        = ha,
-  show_column_names     = TRUE,
-  show_row_names        = TRUE,
-  row_names_gp          = gpar(fontsize = 8),
+  color                    = heatmap_colors,
+  annotation_col           = col_df,
+  annotation_colors        = list(dex = COL_DEX, cell = COL_CELL),
+  show_colnames            = TRUE,
+  show_rownames            = TRUE,
+  fontsize_row             = 8,
   clustering_distance_rows = "euclidean",
-  clustering_method_rows   = "complete",
-  col                   = colorRamp2(c(-2, 0, 2), c("#4DBBD5", "white", "#E64B35")),
-  column_title          = "Top 50 Most Variable Genes (airway)",
-  heatmap_legend_param  = list(title = "Z-score")
+  clustering_method        = "complete",
+  main                     = "Top 50 Most Variable Genes (airway)"
 )
 
 pdf("heatmap_top50_variable_genes.pdf", width = 10, height = 12)
