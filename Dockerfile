@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 RUN Rscript -e "\
-  install.packages(c('ashr', 'circlize', 'matrixStats', 'msigdbr')); \
+  install.packages(c('ashr', 'circlize', 'here', 'matrixStats', 'msigdbr', 'tidyverse')); \
   if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager'); \
   BiocManager::install(c( \
     'airway', \
