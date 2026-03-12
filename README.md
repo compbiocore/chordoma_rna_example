@@ -46,15 +46,15 @@ install.packages(c("msigdbr", "dplyr", "tibble", "circlize"))
 > install.packages("ashr")
 > ```
 
-Alternatively, use the provided Dockerfile to build a container (based on `rocker/verse`, which includes Quarto):
+Alternatively, use the provided Dockerfile to build a container:
 ```
-docker buildx build --platform linux/amd64,linux/arm64 --push -t jwalla12/chordoma_rna_example:20250312 .
+docker buildx build --platform linux/amd64,linux/arm64 --push -t <dockerhub_username>/<container_name>:<container_tag> .
 ```
 
 Or Singularity pull to use on Oscar with Open On Demand RStudio on Singularity (https://docs.ccv.brown.edu/oscar/connecting-to-oscar/open-ondemand):
 
 ```
-singularity pull chordoma_rna_example:20250312.sif docker://jwalla12/chordoma_rna_example:20250312
+singularity pull <singularity_image_name>.sif docker://<dockerhub_username>/<container_name>:<container_tag>
 ```
 
 ## Usage
