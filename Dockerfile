@@ -3,6 +3,7 @@ FROM rocker/tidyverse:4.5.2
 ARG QUARTO_VERSION=1.6.42
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
     libglpk-dev \
   && ARCH=$(dpkg --print-architecture) \
   && curl -fsSL "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-${ARCH}.deb" -o /tmp/quarto.deb \
