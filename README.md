@@ -54,7 +54,7 @@ docker buildx build --platform linux/amd64,linux/arm64 --push -t <dockerhub_user
 Or Singularity pull to use on Oscar with Open On Demand RStudio on Singularity (https://docs.ccv.brown.edu/oscar/connecting-to-oscar/open-ondemand):
 
 ```
-singularity pull <singularity_image_name>.sif docker://<dockerhub_username>/<container_name>:<container_tag>
+singularity pull chordoma_rna_example.sif docker://jwalla12/chordoma_rna_example:quarto
 ```
 
 ## Usage
